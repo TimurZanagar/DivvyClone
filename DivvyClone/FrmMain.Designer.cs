@@ -510,7 +510,7 @@
             this.Name = "FrmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "FrmMain";
-            this.Load += new System.EventHandler(this.FrmMainLoad);
+            this.Load += new System.EventHandler(FrmMainLoad);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);

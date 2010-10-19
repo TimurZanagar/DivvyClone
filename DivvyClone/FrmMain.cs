@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region
+
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -8,16 +9,18 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ManagedWinapi.Windows;
 
+#endregion
+
 namespace DivvyClone
 {
     public partial class FrmMain : Form
     {
-        private const int WH_KEYBOARD_LL = 13;
-        private const int WM_KEYDOWN = 0x0100;
-        private static readonly LowLevelKeyboardProc _proc = HookCallback;
-        private static IntPtr _hookID = IntPtr.Zero;
-        private readonly int HeightStep = (SystemInformation.VirtualScreen.Height/6);
-        private readonly int WidthStep = (SystemInformation.VirtualScreen.Width/6);
+        private const int WhKeyboardLl = 13;
+        private const int WmKeydown = 0x0100;
+        private static readonly LowLevelKeyboardProc Proc = HookCallback;
+        private static IntPtr _hookId = IntPtr.Zero;
+        private readonly int _heightStep = (SystemInformation.VirtualScreen.Height/6);
+        private readonly int _widthStep = (SystemInformation.VirtualScreen.Width/6);
 
         public FrmMain()
         {
@@ -26,16 +29,16 @@ namespace DivvyClone
 
         private void Button1Click(object sender, EventArgs e)
         {
-            SystemWindow[] windows = SystemWindow.AllToplevelWindows;
+            var windows = SystemWindow.AllToplevelWindows;
 
-            foreach (SystemWindow window in windows)
+            foreach (var window in windows)
             {
                 if (window.Title == "Unbenannt - Editor")
                 {
-                    int leftSteps = GetLeftSteps();
-                    int rightSteps = GetRightSteps();
-                    int topSteps = GetTopSteps();
-                    int bottomSteps = GetBottomSteps();
+                    var leftSteps = GetLeftSteps();
+                    var rightSteps = GetRightSteps();
+                    var topSteps = GetTopSteps();
+                    var bottomSteps = GetBottomSteps();
 
                     window.Position = GetNewRect(leftSteps, topSteps, rightSteps, bottomSteps);
                     window.Size = GetNewSize(rightSteps, bottomSteps);
@@ -45,7 +48,7 @@ namespace DivvyClone
 
         private int GetLeftSteps()
         {
-            List<string> checkedBoxes =
+            var checkedBoxes =
                 (from CheckBox checkBox in
                      tableLayoutPanel1.Controls.Cast<Control>().Where(
                          control => control.GetType().Equals(typeof (CheckBox)))
@@ -53,7 +56,7 @@ namespace DivvyClone
                  where checkBox.Checked
                  select checkBox.Name).ToList();
 
-            int leftStep = 0;
+            var leftStep = 0;
 
             if (checkedBoxes[0].StartsWith("A"))
             {
@@ -85,7 +88,7 @@ namespace DivvyClone
 
         private int GetRightSteps()
         {
-            List<string> checkedBoxes =
+            var checkedBoxes =
                 (from CheckBox checkBox in
                      tableLayoutPanel1.Controls.Cast<Control>().Where(
                          control => control.GetType().Equals(typeof (CheckBox)))
@@ -93,7 +96,7 @@ namespace DivvyClone
                  where checkBox.Checked
                  select checkBox.Name).ToList();
 
-            int rightStep = 0;
+            var rightStep = 0;
 
             if (checkedBoxes.Last().StartsWith("A"))
             {
@@ -125,7 +128,7 @@ namespace DivvyClone
 
         private int GetTopSteps()
         {
-            List<string> checkedBoxes =
+            var checkedBoxes =
                 (from CheckBox checkBox in
                      tableLayoutPanel1.Controls.Cast<Control>().Where(
                          control => control.GetType().Equals(typeof (CheckBox)))
@@ -133,7 +136,7 @@ namespace DivvyClone
                  where checkBox.Checked
                  select checkBox.Name).ToList();
 
-            int topStep = 0;
+            var topStep = 0;
 
             if (checkedBoxes.First().EndsWith("1"))
             {
@@ -165,7 +168,7 @@ namespace DivvyClone
 
         private int GetBottomSteps()
         {
-            List<string> checkedBoxes =
+            var checkedBoxes =
                 (from CheckBox checkBox in
                      tableLayoutPanel1.Controls.Cast<Control>().Where(
                          control => control.GetType().Equals(typeof (CheckBox)))
@@ -173,7 +176,7 @@ namespace DivvyClone
                  where checkBox.Checked
                  select checkBox.Name).ToList();
 
-            int bottomStep = 0;
+            var bottomStep = 0;
 
             if (checkedBoxes.Last().EndsWith("1"))
             {
@@ -205,25 +208,25 @@ namespace DivvyClone
 
         private Size GetNewSize(int rightSteps, int bottomSteps)
         {
-            int right = WidthStep*rightSteps;
-            int bottom = HeightStep*bottomSteps;
+            var right = _widthStep*rightSteps;
+            var bottom = _heightStep*bottomSteps;
 
             return new Size(right, bottom);
         }
 
         private RECT GetNewRect(int leftSteps, int topSteps, int rightSteps, int bottomSteps)
         {
-            int left = WidthStep*leftSteps;
-            int top = HeightStep*topSteps;
-            int right = WidthStep*rightSteps;
-            int bottom = HeightStep*bottomSteps;
+            var left = _widthStep*leftSteps;
+            var top = _heightStep*topSteps;
+            var right = _widthStep*rightSteps;
+            var bottom = _heightStep*bottomSteps;
 
             return new RECT(left, top, right, bottom);
         }
 
-        private void FrmMainLoad(object sender, EventArgs e)
+        private static void FrmMainLoad(object sender, EventArgs e)
         {
-            _hookID = SetHook(_proc);
+            _hookId = SetHook(Proc);
 
 
             //foreach(var control in tableLayoutPanel1.Controls.Cast<Control>().Where(control => control.GetType().Equals(typeof (CheckBox))))
@@ -244,23 +247,23 @@ namespace DivvyClone
 
         private static IntPtr SetHook(LowLevelKeyboardProc proc)
         {
-            using (Process curProcess = Process.GetCurrentProcess())
-            using (ProcessModule curModule = curProcess.MainModule)
+            using (var curProcess = Process.GetCurrentProcess())
+            using (var curModule = curProcess.MainModule)
             {
-                return SetWindowsHookEx(WH_KEYBOARD_LL, proc,
+                return SetWindowsHookEx(WhKeyboardLl, proc,
                                         GetModuleHandle(curModule.ModuleName), 0);
             }
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && wParam == (IntPtr) WM_KEYDOWN)
+            if (nCode >= 0 && wParam == (IntPtr) WmKeydown)
             {
-                int vkCode = Marshal.ReadInt32(lParam);
+                var vkCode = Marshal.ReadInt32(lParam);
                 Debug.WriteLine((Keys) vkCode);
             }
 
-            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+            return CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -279,7 +282,7 @@ namespace DivvyClone
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            UnhookWindowsHookEx(_hookID);
+            UnhookWindowsHookEx(_hookId);
             base.OnClosing(e);
         }
 
